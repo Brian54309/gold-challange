@@ -1,12 +1,1 @@
-[
-    {
-        "userid":1,
-        "email":"qwery@gmail.com",
-        "username":"qwerty5432"
-    },
-    {
-        "userid":2,
-        "email":"lorem@ipsum.com",
-        "username":"loremipsum"
-    }
-]
+[{"userid":1,"email":"qwesy@gmail.com","username":"qwerty5432","password":"pafssword"},{"userid":2,"email":"lorem@ipsum.com","username":"loremipsum","password":"123456"}]

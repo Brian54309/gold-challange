@@ -15,6 +15,8 @@ productRouter
 productRouter
 .route('/')
 .get(ProductController.getAll)
+.delete(ProductController.deleteItem)
+
 
 
 module.exports = productRouter

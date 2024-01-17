@@ -6,11 +6,13 @@ app.set('view engine', 'ejs');
 app.use(express.static("public"));
 
 const userRouter = require('./Router/userRouter.js')
+const productRouter=require('./Router/productRouter.js');
+const orderRouter = require('./Router/orderRouter.js')
 
 const morgan =require('morgan')
 
 
-const productRouter=require('./Router/productRouter.js')
+
 
 
 app.use(express.json());
@@ -29,7 +31,7 @@ app.use('/users',userRouter)
 
 app.use('/products',productRouter)
 
-
+app.use('/orders',orderRouter)
 
 app.listen(PORT,()=>{
     console.log(`Server running on port ${PORT}`)

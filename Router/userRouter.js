@@ -1,8 +1,7 @@
 const express = require('express');
 const userRouter = express.Router()
-const {formatResponseJSON} = require('../response.js')
-const {users} = require("../Database/users.json")
 const {UserController} = require('../controller/userController.js')
+const {loginHandler} = require('../controller/userController.js')
 
 
 
@@ -16,11 +15,11 @@ userRouter
 .get((req,res)=>{
     res.render('login')
 })
-.post(UserController.logIn)
+.post(loginHandler.logIn)
 
 userRouter
 .route('/logout')
-.get(UserController.logOut)
+.get(loginHandler.logOut)
 
 userRouter
 .route('/register')
@@ -32,11 +31,13 @@ userRouter
 userRouter
     .route('/')
     .get(UserController.getAll);
+    
 
 
 userRouter
     .route('/:userid')
     .get(UserController.getById)
     .delete(UserController.deleteUser)
+    .put(UserController.updateUser);
 
 module.exports = userRouter
