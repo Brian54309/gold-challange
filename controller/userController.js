@@ -1,128 +1,142 @@
-const { log } = require("console");
-let users = require("../Database/users.json")
+const {User,userlogin}= require('../models')
 const {formatResponseJSON} = require('../response.js')
-const fs = require("fs");
+
+
 
 
 class UserController{
     
-    static getAll(req,res){
+    static async getAll(req,res){
         let message='success'
-        return res.status(200).json(formatResponseJSON(users, message));
+        const user = await User.findAll()
+        return res.status(200).json(formatResponseJSON(user, message));
     }
 
-    static getById(req,res){
+    static async getById(req,res){
         let statusCode =200;
         let message='success'
-        let user = users.find((i)=>i.userid ===+req.params.userid);
-
-        if (user === undefined){
-            statusCode=404;
-            message=`Users with id ${req.params.userid} does not exist`
-
-        }
-        return res.status(statusCode).json(formatResponseJSON(user,message))
-    }
-
-    static deleteUser(req,res){
-        let userid = +req.params.userid;
-        let statusCode=200
-        const data = users.find((i)=> i.userid === +userid);
-
-        if(data === undefined){
-            statusCode=404;
-            message = `User with id ${userid} does not exist`;
-            return res.status(statusCode).json(formatResponseJSON(data,message))
+        try{
+        let id = +req.params.userid
+        let user = await User.findOne({
+            where:{
+              id,
+            }
+          })
+        if(!user){
+            throw new Error('User is not found')
 
         }
-        let newData=users.filter((data) =>data.userid !==userid);
+        
+          let result = user.dataValues;
+          return res.status(statusCode).json(formatResponseJSON(result,message))
+          
+          
+        }catch (error){
+            return res.status(404).json({message:error.message})
+        }
+        
 
-        fs.writeFileSync("./Database/users.json",JSON.stringify(newData),"utf-8")
-        return res.status(statusCode).json(formatResponseJSON())
+    } 
+
+    static async deleteUser(req,res){
+
+
+        try{
+            let id = +req.params.userid;
+            let user= await User.destroy({
+                where:{
+                    id
+                }
+            })
+            if(!user){
+                throw new Error('User is not found')
+            }
+            return res.status(200).json({message:'user successfully deleted'})
+        }catch (error){
+            return res.status(404).json({message:error.message})
+        }
+
+       
     }
 
-    static updateUser(req,res){
-        let userid =+req.params.userid;
+    static async updateUser(req,res){
+        let id =+req.params.userid;
         let statusCode=200;
-
-        const data = users.find((i)=>i.userid === +userid)
-        if(data === undefined){
-            statusCode=404;
-            message=`User with id ${userid} does not exist`;
-            return res.status(statusCode).json(formatResponseJSON(data,message))
+        let {email,username,password}=req.body
+        try{
+            let user = await User.findOne(
+                {where:{
+                    id,
+                },
+            })
+            await User.update({email:email,username:username,password:password},
+                {where:{
+                id
+            }})
+        if(!user){
+            throw new Error('User is not found')
         }
-        let {email,username,password}=req.body;
-        data.email = email?email:data.email;
-        data.username = username?username:data.username;
-        data.password = password?password:data.password;
-
-        for(let i=0;i<users.length;i++){
-            if(users[i].userid===userid){
-                users[i]=data;
-                break;
-            }
+        }catch(error){
+            return res.status(404).json({message:error.message})
         }
-        fs.writeFileSync("./Database/users.json",JSON.stringify(users),"utf-8");
-        return res.status(statusCode).json(formatResponseJSON(users))
+        return res.status(statusCode).json({message:'User credential successfully changed'})
 
     }
 
-    static register(req,res){
+    static async register(req,res){
         
         let {email,username,password}=req.body;
-        let userid =users[users.length - 1].userid+1;
-
-        let data={
-            userid:userid,
-            email:email,
-            username:username,
-            password:password
+        try{
+            let user = await User.findOne({where:
+            {email:email}
+        })
+        if(!user){
+        await User.create({email:email,username:username,password:password})
         }
-        users.push(data)
-        fs.writeFileSync("./Database/users.json",JSON.stringify(users),"utf-8")
-        res.redirect('/')
-    }
-
+        if(user){
+            throw new Error('User has already exist')
+        }}catch(error){
+            return res.status(409).json({message:error.message})
+        }
     
-
-
-
+        return res.status(200).json({message:'New user successfully registered'})
+    
     }
 
 
+}
 class loginHandler{
-    temp_data=''
-     static logIn(req,res){
 
-        let data={
-            email:req.body.email,
-            password:req.body.password
-        }
-    
-        let isFound=true
-        
-        for(let i=0;i<users.length;i++){
-            let check_data=users[i]
-            if((data.email===check_data.email)&&(data.password===check_data.password)){
-                loginHandler.temp_data=check_data.userid
-                break;
+    static async logIn(req,res){
+
+        let{email,password}=req.body
+        let user = await userlogin.findAll()
+        let user2=await User.findOne({where:{
+            email:email,
+            password:password
+        }})
+        try{
+            if(user.length!==0){
+                console.log(user.length)
+                throw new Error('User is already logged in')
+
+            }else if(!user2){
+                throw new Error('User email and password does not match')
             }else{
-                isFound=false
+                await userlogin.create({userid:user2.id})
+                return res.status(200).json({message:'User successfully login'})
             }
+        }catch(error){
+            return res.status(403).json({message:error.message})
         }
-            if(isFound===true){   
-                res.redirect('/')
-                
-            }else{
-                res.redirect('/users/login')
-    
-            }
+
         
     }
-    static logOut(req,res){
-        loginHandler.temp_data='';
-        console.log(loginHandler.temp_data)
-    res.redirect('/users/login')
+    static async logOut(req,res){
+        await userlogin.destroy({
+            truncate:true
+        })
+        return res.status(200).json({message:'Logout successful'})
     }
 }
 

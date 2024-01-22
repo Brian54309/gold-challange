@@ -8,15 +8,14 @@ productRouter.use(function timeLog(req,res,next){
     next()
 })
 
-productRouter
-.route('/addItem')
-.post(ProductController.addItem)
 
 productRouter
 .route('/')
 .get(ProductController.getAll)
+.post(ProductController.addItem)
+
+productRouter
+.route('/:id')
 .delete(ProductController.deleteItem)
-
-
-
+.put(ProductController.updateProduct)
 module.exports = productRouter

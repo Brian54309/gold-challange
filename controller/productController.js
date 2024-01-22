@@ -1,61 +1,74 @@
-let products = require('../Database/products.json')
+const {Product}= require('../models')
 const {formatResponseJSON} = require('../response.js')
-const fs = require("fs");
+
 
 class ProductController{
-    static getAll(req, res){
-        let message = "success";
-        res.status(200).json(formatResponseJSON(products, message));
+    static async getAll(req,res){
+        let message='success'
+        const product = await Product.findAll()
+        return res.status(200).json(formatResponseJSON(product,message));
     }
-    static addItem(req,res){
-        let data={
-            productid:products[products.length-1].productid+1,
-            item:req.body.item,
-            price:req.body.price,
-            stocks:req.body.stocks
+    static async addItem(req,res){
+        
+        let {item,price,stocks}=req.body;
+        try{
+            let product = await Product.findOne({where:
+            {item:item}
+        })
+        if(!product){
+        await Product.create({item:item,price:price,stocks:stocks})
         }
-        products.push(data);
-        fs.writeFileSync("./Database/products.json",JSON.stringify(products),"utf-8")
+        if(product){
+            throw new Error('Product has already exist')
+        }}catch(error){
+            return res.status(409).json({message:error.message})
+        }
+    
+        return res.status(200).json({message:'New product successfully added'})
+    
     }
-    static deleteItem(req,res){
-        let id = +req.params.productidid;
-        let statusCode = 200;
+    static async deleteItem(req,res){
 
-        const data = products.find((i)=>i.id === +id);
 
-        if(data===undefined){
-            statusCode=404;
-            message = `Product with id ${id} does not exist`
-            return res.status(statusCode).json(formatResponseJSON(data,message))
-        }
-        let newProduct = products.filter((data)=> data.id !=id);
-        fs.writeFileSync('../Database/products.json',JSON.stringify(newProduct),"utf-8")
-        return res.status(201).json(formatResponseJSON(data))
-
-    }
-    static updateProduct(req,res){
-        let id = +req.params.productid
-        let statusCode=200;
-
-        const data = products.find((i)=>i.productid.id===+id)
-        if(data===undefined){
-            statusCode=404;
-            message=`Product with id ${id} does not exist`;
-            return res.status(statusCode).json(formatResponseJSON(data,message))
-        }
-        let {item,price,stocks} = req.body;
-        data.item = item?item:data.item;
-        data.price = price?price:data.price;
-        data.stocks = stocks?stocks:data.stocks;
-
-        for(leti=0;i<products.length;i++){
-            if(products[i].productid===id){
-                products[i]=data;
-                break;
+        try{
+            let id = +req.params.id;
+            let product= await Product.destroy({
+                where:{
+                    id
+                }
+            })
+            if(!product){
+                throw new Error('Product is not found')
             }
+            return res.status(200).json({message:'Product successfully deleted'})
+        }catch (error){
+            return res.status(404).json({message:error.message})
         }
-        fs.writeFileSync("./Database/products.json",JSON.stringify(products),"utf-8");
-        return res.status(statusCode).json(formatResponseJSON(products))
+
+       
+    }
+    static async updateProduct(req,res){
+        let id =+req.params.id;
+        let statusCode=200;
+        let {item,price,stocks}=req.body
+        try{
+            let product = await Product.findOne(
+                {where:{
+                    id,
+                },
+            })
+            await Product.update({item:item,price:price,stocks:stocks},
+                {where:{
+                id
+            }})
+        if(!product){
+            throw new Error('Product is not found')
+        }
+        }catch(error){
+            return res.status(404).json({message:error.message})
+        }
+        return res.status(statusCode).json({message:'Product successfully updated'})
+
     }
 }
 module.exports ={ProductController}

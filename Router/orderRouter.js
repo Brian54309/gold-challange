@@ -12,3 +12,7 @@ orderRouter
 .get(orderController.getAll)
 .post(orderController.purchase)
 module.exports = orderRouter
+orderRouter
+.route('/:id')
+.get(orderController.getById)
+.put(orderController.failOrderById)

@@ -1,71 +1,112 @@
 let orders = require('../Database/orders.json')
-const products = require('../Database/products.json')
-const users = require('../Database/users.json')
+let {User,userlogin,Product,Order}= require('../models')
 
 const {formatResponseJSON} = require('../response.js')
-const fs = require("fs");
 const {loginHandler} = require('../controller/userController.js')
 
 
 class orderController{
 
-    static getAll(req,res){
-        let message = "success";
-        console.log(loginHandler.temp_data)
-        res.status(200).json(formatResponseJSON(orders, message));
+    static async getAll(req,res){
+        let message='success'
+        const order = await Order.findAll()
+        return res.status(200).json(formatResponseJSON(order, message));
     }
-    static purchase(req,res){
-        let statusCode=200;
-        let messages='success'
-        let data=''
+    static async getById(req,res){
+        let id = +req.params.id
+        let product=[]
+        console.log(id)
+        try{
+            let order = await Order.findOne({where:
+            {id,
+            }})
+            let user = await User.findOne({where:{
+                id:order.dataValues.userid
+            }})
+            order.user=user.dataValues;
+            let productList=order.dataValues.productid;
+            console.log(productList)
+            for(let i=0;i in productList;i++){
+                product.push(await Product.findOne({where:{
+                    id:productList[i]
+                }}
+                ))
+                }
+                order.product = product
+                if(!order){
+                    throw new Error('Order is not found')
+                }
+                return res.status(200).json({data:order,dataUser:order.user,dataProdut:order.product})
+
+            }catch(error){
+            return res.status(404).json({message:error.message})
+        }
+    }
+
+    
+
+    static async purchase(req,res){
         let totalPrice=0;
+        let status='order successful'
         let{productid,quantity}=req.body
-        let orderid=orders[orders.length-1].orderid+1;
+        try{
+            let user = await userlogin.findAll()
+            let product = await Product.findAll(
+                {where:{
+                    id:productid,
+                }})
+            if(user.length===0){
+                throw new Error('User has not login yet')
+            }
+            if(!product){
+                throw new Error('Product selected does not exist')
+            }
+            for(var i in product){
+                totalPrice+=product[i].price*quantity[i]
+                let finalQuantity=product[i].stocks-quantity[i]
+                await Product.update({stocks:finalQuantity},{where:
+                {id:product[i].id}})
+            }
+            await Order.create({userid:user[0].userid,productid:productid,quantity:quantity,totalPrice:totalPrice,status:status})
+            return res.status(200).json({message:'Order successfully placed'})
+        }catch(error){
+            return res.status(406).json({message:error.message})
+        }
 
-        const timeElapsed = Date.now();
-        const today = new Date(timeElapsed);
 
-        if(loginHandler.temp_data===undefined){
-            statusCode=401;
-            messages='User has not log in yet'
-            res.status(statusCode).json(formatResponseJSON(data,messages))
-        }
-        if(productid.length!==quantity.length){
-            let statusCode=406;
-            message=`amount of item and quantity entered does not match`;
-            return res.status(statusCode).json(formatResponseJSON(data,message))
-        }
-        for(let c=0;c<productid.length;c++){
-            let product = products.find((i)=>i.productid ===productid[c] )
-        if(product===undefined){
-            statusCode=404;
-            message = `Product with id ${id} does not exist`
-            return res.status(statusCode).json(formatResponseJSON(data,message))
-        }else if(quantity>product.quantity){
-            let statusCode=406;
-            messages=`Quantity of order exceeds the stock of item ${product.item}`
-            return res.status(statusCode).json(formatResponseJSON(data,message))
-        }else{
-            let price = quantity[c]*product.price
-            totalPrice +=price;
-        }
+        
 
     }
-        data={
-            orderid:orderid,
-            userid:loginHandler.temp_data,
-            dateOrdered:today.toUTCString(),
-            productid:productid,
-            quantity:quantity,
-            totalPrice:totalPrice,
+    static async failOrderById(req,res){
+        let id = +req.params.id;
+        try{
+        let order = await Order.findOne({where:{id}})
+        if(!order){
+            throw new Error('Order is not found')
+        }
+        if(order.dataValues.status==='fail'){
+            throw new Error('Order status is failed')
         }
 
-        orders.push(data)
-        fs.writeFileSync("./Database/orders.json",JSON.stringify(orders),"utf-8")
-        return res.status(statusCode).json(formatResponseJSON(data))
+        await Order.update({status:'failed'},{where:{id}})
+        let productList=order.dataValues.productid
+        
+        for(let i=0;i in productList;i++){
+            let product = await Product.findOne({where:{
+                id:productList[i]
 
+            }})
+            let finalQuantity=product.stocks+order.dataValues.quantity[i]
+            await Product.update({stocks:finalQuantity},{where:{
+                id:productList[i]
+            }})
+        }
+        return res.status(200).json({message:'Order status has been updated'})
+    }catch(error){
+        return res.status(406).json({message:error.message})
+    }
+        
     }
 }
-
 
 module.exports ={orderController}
