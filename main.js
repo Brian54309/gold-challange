@@ -1,8 +1,6 @@
 const express = require('express');
 const app = express()
 const PORT =3000;
-
-app.set('view engine', 'ejs');
 app.use(express.static("public"));
 
 const userRouter = require('./Router/userRouter.js')
@@ -23,7 +21,7 @@ app.use(express.urlencoded({extended:false}))
 app.use(morgan('combined'))
 
 app.get('/',(req,res)=>{
-    res.render("index")
+    res.status(200).json({message:'Welcome to homepage'})
 })
 
  
@@ -32,6 +30,10 @@ app.use('/users',userRouter)
 app.use('/products',productRouter)
 
 app.use('/orders',orderRouter)
+
+app.use(function(req,res,next){
+    res.status(404).json({message:'Path entered does not exist'})
+})
 
 app.listen(PORT,()=>{
     console.log(`Server running on port ${PORT}`)

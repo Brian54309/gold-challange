@@ -1,8 +1,6 @@
-let orders = require('../Database/orders.json')
 let {User,userlogin,Product,Order}= require('../models')
-
 const {formatResponseJSON} = require('../response.js')
-const {loginHandler} = require('../controller/userController.js')
+
 
 
 class orderController{

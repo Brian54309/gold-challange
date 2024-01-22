@@ -16,6 +16,7 @@ productRouter
 
 productRouter
 .route('/:id')
+.get(ProductController.getById)
 .delete(ProductController.deleteItem)
 .put(ProductController.updateProduct)
 module.exports = productRouter

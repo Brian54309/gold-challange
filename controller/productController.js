@@ -8,6 +8,29 @@ class ProductController{
         const product = await Product.findAll()
         return res.status(200).json(formatResponseJSON(product,message));
     }
+    static async getById(req,res){
+        let statusCode =200;
+        let message='success'
+        try{
+        let id = +req.params.id
+        let product = await Product.findOne({
+            where:{
+              id,
+            }
+          })
+        if(!product){
+            throw new Error('User is not found')
+
+        }
+        
+          let result = product.dataValues;
+          return res.status(statusCode).json(formatResponseJSON(result,message))
+          
+          
+        }catch (error){
+            return res.status(404).json({message:error.message})
+        }
+    }
     static async addItem(req,res){
         
         let {item,price,stocks}=req.body;
