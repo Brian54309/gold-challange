@@ -133,11 +133,19 @@ class loginHandler{
         
     }
     static async logOut(req,res){
+        try{
+        let user= await userlogin.findAll()
+        if(user.length===0){
+            throw new Error('User has not sign in yet')
+        }
         await userlogin.destroy({
             truncate:true
         })
         return res.status(200).json({message:'Logout successful'})
+    }catch (error){
+        return res.status(404).json({message:error.message})
     }
+}
 }
 
 module.exports={UserController,loginHandler}
