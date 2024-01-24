@@ -6,7 +6,8 @@ const {formatResponseJSON} = require('../response.js')
 
 class UserController{
     
-    static async getAll(req,res){
+    static async getAll(req, res) {
+        //Note pastikan pakai try-catch jika menggunakan async-await 
         let message='success'
         const user = await User.findAll()
         return res.status(200).json(formatResponseJSON(user, message));
@@ -15,7 +16,8 @@ class UserController{
     static async getById(req,res){
         let statusCode =200;
         let message='success'
-        try{
+        try {
+            //Note: indentasi
         let id = +req.params.userid
         let user = await User.findOne({
             where:{
@@ -68,7 +70,8 @@ class UserController{
                 {where:{
                     id,
                 },
-            })
+                })
+            //Note: menyimpan password user ke database tanpa enkripsi tidak dianjurkan. Pakai bantuan library seperti bcryptjs
             await User.update({email:email,username:username,password:password},
                 {where:{
                 id
@@ -90,7 +93,8 @@ class UserController{
             let user = await User.findOne({where:
             {email:email}
         })
-        if(!user){
+            if (!user) {
+            //Note: menyimpan password user ke database tanpa enkripsi tidak dianjurkan. Pakai bantuan library seperti bcryptjs
         await User.create({email:email,username:username,password:password})
         }
         if(user){

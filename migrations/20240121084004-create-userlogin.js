@@ -9,6 +9,7 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      //Note: Nama kolom bisa pakai camelCase saja jangan semua huruf kecil
       userid: {
         type: Sequelize.INTEGER
       },

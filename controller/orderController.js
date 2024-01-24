@@ -1,20 +1,23 @@
 let {User,userlogin,Product,Order}= require('../models')
 const {formatResponseJSON} = require('../response.js')
 
-
+//Note: Space ini kegedean
 
 class orderController{
 
-    static async getAll(req,res){
+    static async getAll(req, res) {
+        //Note pastikan pakai try-catch jika menggunakan async-await 
         let message='success'
         const order = await Order.findAll()
         return res.status(200).json(formatResponseJSON(order, message));
     }
     static async getById(req,res){
         let id = +req.params.id
-        let product=[]
+        let product = []
+        //Note: console.log bisa dihapus saja
         console.log(id)
-        try{
+        try {
+            //Note: Indentasi, penggunaan enter bisa dirapihkan
             let order = await Order.findOne({where:
             {id,
             }})
@@ -36,7 +39,8 @@ class orderController{
                 }
                 return res.status(200).json({data:order,dataUser:order.user,dataProdut:order.product})
 
-            }catch(error){
+        } catch (error) {
+            //Note: Pada dasarnya perlu mapping atau validasi lebih untuk menentukan sebuah error apakah memiliki status code tertentu seperti 400 atau 500. Bisa dipertimbangkan untuk melakukan mapping status code untuk error error yang mungkin terjadi. Note ini berlaku untuk endpoint lain
             return res.status(404).json({message:error.message})
         }
     }
@@ -59,6 +63,7 @@ class orderController{
             if(!product){
                 throw new Error('Product selected does not exist')
             }
+            //Note: Disini harusnya pakai transaction untuk update product dan create order
             for(var i in product){
                 totalPrice+=product[i].price*quantity[i]
                 let finalQuantity=product[i].stocks-quantity[i]

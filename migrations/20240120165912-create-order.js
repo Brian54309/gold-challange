@@ -9,6 +9,7 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      //Note: Nama kolom bisa pakai camelCase saja jangan semua huruf kecil
       userid: {
         type: Sequelize.INTEGER,
         allowNull:false,
@@ -17,7 +18,9 @@ module.exports = {
           model:'Users'
         },
       },
+      //Note: Nama kolom bisa pakai camelCase saja jangan semua huruf kecil
       productid: {
+        //Note: Sebetulnya menyimpan data berbentuk array dalam 1 kolom bukan best practice. Lebih baik insert banyak baris sekalian daripada insert array
         type: Sequelize.ARRAY(Sequelize.INTEGER),
         allowNull:false,
         reference:{

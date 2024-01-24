@@ -3,7 +3,8 @@ const {formatResponseJSON} = require('../response.js')
 
 
 class ProductController{
-    static async getAll(req,res){
+    static async getAll(req, res) {
+        //Note pastikan pakai try-catch jika menggunakan async-await 
         let message='success'
         const product = await Product.findAll()
         return res.status(200).json(formatResponseJSON(product,message));
@@ -11,7 +12,8 @@ class ProductController{
     static async getById(req,res){
         let statusCode =200;
         let message='success'
-        try{
+        try {
+            //Note: perhatikan indentasi
         let id = +req.params.id
         let product = await Product.findOne({
             where:{

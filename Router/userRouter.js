@@ -15,7 +15,8 @@ userRouter
 .post(loginHandler.logIn)
 
 userRouter
-.route('/logout')
+    .route('/logout')
+    //Note: Logout bisa dibuat put / patch / post saja jangan get
 .get(loginHandler.logOut)
 
 
